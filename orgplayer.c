@@ -137,15 +137,15 @@ void LoadWaveTable()
 
 typedef struct{
 	u32 start;
-	u8 note;
-	u8 length;
-	u8 volume;
-	u8 panning;
+	s32 note;
+	s32 length;
+	s32 volume;
+	s32 panning;
 } _org_notes;
 
 typedef struct{
-	u16 tuning;
-	u8 wave; /* wave */
+	s32 tuning;
+	s32 wave; /* wave */
 	bool pi;
 	u16 nbnotes;
 	_org_notes* notes;
@@ -159,7 +159,7 @@ typedef struct{
 
 struct {
 	u8 signFile[6];
-	u16 tempo;
+	s32 tempo;
 	u8 stepperbar;
 	u8 beatperstep;
 	u32 loopbegin;
