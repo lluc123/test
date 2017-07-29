@@ -229,7 +229,7 @@ double lanczos(double d)
         double dr = (d *= 3.14159265) / radius;
         return sin(d) * sin(dr) / (d*dr);
 }
-
+/*
 void Org_Play2(unsigned sampling_rate, FILE* foutput)
 {
 	
@@ -264,6 +264,7 @@ void Org_Play2(unsigned sampling_rate, FILE* foutput)
 #endif
 	}
 }
+*/
 void Org_Play(unsigned sampling_rate, FILE* output)
 {
 	#ifdef __WIN32__
@@ -326,8 +327,8 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 			//Generate WAV
 			//Creating volume for left and right
 			
-			double left = (i->cur_pan > 6 ? 12 - i->cur_pan : 6);
-			double right = (i->cur_pan < 6 ? i->cur_pan : 6);
+			double left = (i->cur_pan > 6 ? 12 - i->cur_pan : 6) * i->cur_vol;
+			double right = (i->cur_pan < 6 ? i->cur_pan : 6) * i ->cur_vol;
 
 			int n = samples_per_beat > i->cur_length ? i->cur_length : samples_per_beat;
 			int p;
