@@ -285,7 +285,13 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 	before_loop:
 	for(;;++cur_beat)
 	{
-		if(cur_beat == head.loopend) cur_beat = head.loopbegin;
+		if(cur_beat == head.loopend) { 
+			cur_beat = head.loopbegin;
+			for(j = 0; j < 16; j++)
+			{
+				head.ins[j].lastnote = 0;
+			}
+		}
 		fprintf(stderr, "[%d (%g seconds)]   \r",
 			cur_beat, total_beats++*samples_per_beat/(double)(sampling_rate));
 		memset(result,0, sizeof(float)*(samples_per_beat *2));
