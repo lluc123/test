@@ -345,8 +345,8 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 				int min = -radius/scale + pos - 0.5;
 				int max =  radius/scale + pos + 0.5;
 				int m;
-				sample = 0;
-				density =0;
+				//sample = 0;
+				//density =0;
 				for(m=min; m<max; ++m) // Collect a weighted average.
 				{
 					double factor = lanczos( (m-pos+0.5) * scale );
@@ -365,7 +365,7 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 		WindowsAudio::Write( (const unsigned char*) &result[0], 4*result.size());
 		std::fflush(stderr);
 #else
-		fwrite(&result[0], 4,sizeof(float)*(samples_per_beat *2), output);
+		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
 		fflush(output);
 #endif
 	}
