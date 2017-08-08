@@ -127,7 +127,7 @@ int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a;
 short WaveTable[100*256];
 void LoadWaveTable()
 {
-	FILE *fp = fopen("wave.dat","rb");
+	FILE *fp = fopen("data/wavetable.dat","rb");
 	size_t i;
 	for(i=0;i<100*256;i++)
 	{

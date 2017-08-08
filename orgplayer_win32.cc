@@ -124,7 +124,7 @@ static std::vector<short> DrumSamples[12];
 
 void LoadWaveTable()
 {
-    FILE* fp = std::fopen("wave.dat", "rb");
+    FILE* fp = std::fopen("data/wavetable.dat", "rb");
     if(!fp) { std::perror("data/wavetable.dat"); return; }
     for(size_t a=0; a<100*256; ++a)
         WaveTable[a] = (signed char) fgetc(fp);
