@@ -364,7 +364,7 @@ struct Song
                             i.phaseinc = event.note * (22050/32.5) / sampling_rate; // Linear frequency
                             i.cur_wave     = &d[0];
                             i.cur_wavesize = d.size();
-                            i.cur_length   = 0;
+                            i.cur_length   = d.size() / i.phaseinc;
                         }
                         // Ignore missing drum samples
                         if(i.cur_wavesize <= 0) i.cur_length = 0;
@@ -422,7 +422,7 @@ struct Song
 int main(int argc, char** argv) /* どうくつ ものがたり */
 {
     LoadWaveTable();
-//    LoadDrums();
+    LoadDrums();
     song.Load(argv[1]);
 
     FILE* fp = popen("aplay -fdat -fFLOAT_LE", "w"); /* Send audio to aplay */
