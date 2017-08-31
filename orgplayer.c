@@ -16,6 +16,8 @@ int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a;
 
 double taylorSined(double rad)
 {
+	if(rad>1.57 || rad<-1.57)
+		fprintf(stderr, "\rtaylorSined : 1 \n");
 	const double square = rad * rad;
 	double total = rad * square;
 	double ret = rad - total/6;
