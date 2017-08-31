@@ -14,6 +14,34 @@ typedef int8_t s8;
 int fget16(FILE* fp) { int a = fgetc(fp); int b = fgetc(fp); return (b<<8)+a; }
 int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a; }
 
+double fgetv(FILE* fp) // Load a numeric value from text file; one per line.
+{
+    char Buf[4096], *p=Buf; Buf[4095]='\0';
+    if(!std::fgets(Buf, sizeof(Buf)-1, fp)) return 0.0;
+    // Ignore empty lines. If the line was empty, try next line.
+    if(!Buf[0] || Buf[0]=='\r' || Buf[0]=='\n') return fgetv(fp);
+    while(*p && *p++ != ':') {} // Skip until a colon character.
+    return strtod(p, 0);   // Parse the value and return it.
+}
+//========= PART 1 : SOUND EFFECT PLAYER (PXT) ========//
+
+static signed char Waveforms[6][256];
+void GenerateWaveforms()
+{
+    /* Six simple waveforms are used as basis for the signal generators in PXT: */
+    for(unsigned seed=0, i=0; i<256; ++i)
+    {
+        /* These waveforms are bit-exact with PixTone v1.0.3. */
+        seed = (seed * 214013) + 2531011; // Linear congruential generator
+        Waveforms[0][i] = 0x40 * sin(i * 3.1416 / 0x80); // Sine
+        Waveforms[1][i] = ((0x40+i) & 0x80) ? 0x80-i : i;     // Triangle
+        Waveforms[2][i] = -0x40 + i/2;                        // Sawtooth up
+        Waveforms[3][i] =  0x40 - i/2;                        // Sawtooth down
+        Waveforms[4][i] =  0x40 - (i & 0x80);                 // Square
+        Waveforms[5][i] = (signed char)(seed >> 16) / 2;      // Pseudorandom
+    }
+}
+
 short WaveTable[100*256];
 void LoadWaveTable()
 {
