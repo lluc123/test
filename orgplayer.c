@@ -155,13 +155,13 @@ void Org_Load(const char* fn)
 
 #define radius 2
 
-inline double lanczos(double d)
+double lanczos(double d)
 {
 	if(d == 0) return 1.;
         if(fabs(d) > radius) return 0;
         double dr = (d *= 3.14159265) / radius;
         return sin(d) * sin(dr) / (d*dr);
-	return taylorSined(d) * taylorSined(dr) / (d*dr);
+//	return taylorSined(d) * taylorSined(dr) / (d*dr);
 }
 /*
 void Org_Play2(unsigned sampling_rate, FILE* foutput)
@@ -248,7 +248,7 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 				if(cur_note->panning != 255) i->cur_pan = cur_note->panning;
 				if(cur_note->note != 255)
 				{
-					double freq = (double)((cur_note->note + i->tuning/1000.0+155.376)/12);
+					double freq = (double)((cur_note->note + i->tuning/1000.0+155.376)/12.0);
 					freq *= freq;
 					i->phaseinc = freq / sampling_rate;
 					i->phaseacc = 0;
