@@ -17,7 +17,7 @@ int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a;
 double fgetv(FILE* fp) // Load a numeric value from text file; one per line.
 {
     char Buf[4096], *p=Buf; Buf[4095]='\0';
-    if(!std::fgets(Buf, sizeof(Buf)-1, fp)) return 0.0;
+    if(!fgets(Buf, sizeof(Buf)-1, fp)) return 0.0;
     // Ignore empty lines. If the line was empty, try next line.
     if(!Buf[0] || Buf[0]=='\r' || Buf[0]=='\n') return fgetv(fp);
     while(*p && *p++ != ':') {} // Skip until a colon character.
