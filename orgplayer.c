@@ -16,8 +16,8 @@ int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a;
 
 double taylorSined(double rad)
 {
-	if(rad>1.57 || rad<-1.57)
-		fprintf(stderr, "\rtaylorSined : %f \n", rad);
+/*	if(rad>1.57 || rad<-1.57)
+		fprintf(stderr, "\rtaylorSined : %f \n", rad);*/
 	const double square = rad * rad;
 	double total = rad * square;
 	double ret = rad - total/6;
@@ -32,7 +32,7 @@ double taylorSined(double rad)
 double fgetv(FILE* fp) // Load a numeric value from text file; one per line.
 {
     char Buf[4096], *p=Buf; Buf[4095]='\0';
-    if(!std::fgets(Buf, sizeof(Buf)-1, fp)) return 0.0;
+    if(!fgets(Buf, sizeof(Buf)-1, fp)) return 0.0;
     // Ignore empty lines. If the line was empty, try next line.
     if(!Buf[0] || Buf[0]=='\r' || Buf[0]=='\n') return fgetv(fp);
     while(*p && *p++ != ':') {} // Skip until a colon character.
@@ -160,7 +160,7 @@ inline double lanczos(double d)
 	if(d == 0) return 1.;
         if(fabs(d) > radius) return 0;
         double dr = (d *= 3.14159265) / radius;
-//        return sin(d) * sin(dr) / (d*dr);
+        return sin(d) * sin(dr) / (d*dr);
 	return taylorSined(d) * taylorSined(dr) / (d*dr);
 }
 /*
