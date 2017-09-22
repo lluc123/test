@@ -248,8 +248,7 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 				if(cur_note->panning != 255) i->cur_pan = cur_note->panning;
 				if(cur_note->note != 255)
 				{
-					double freq = (double)((cur_note->note + i->tuning/1000.0+155.376)/12.0);
-					freq *= freq;
+					double freq = pow(2,((cur_note->note + i->tuning/1000.0+155.376)/12.0));
 					i->phaseinc = freq / sampling_rate;
 					i->phaseacc = 0;
 
