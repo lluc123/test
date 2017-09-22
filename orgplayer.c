@@ -14,6 +14,21 @@ typedef int8_t s8;
 int fget16(FILE* fp) { int a = fgetc(fp); int b = fgetc(fp); return (b<<8)+a; }
 int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a; }
 
+double taylorSined(double rad)
+{
+/*	if(rad>1.57 || rad<-1.57)
+		fprintf(stderr, "\rtaylorSined : %f \n", rad);*/
+	const double square = rad * rad;
+	double total = rad * square;
+	double ret = rad - total/6;
+	total = total * square;
+	ret += total/120;
+	total = total * square;
+	ret -= total/5040;
+	//return rad - (pow(rad,3)/6) + (pow(rad,5)/120) - (pow(rad,7)/5040);
+	return ret;
+}
+
 double fgetv(FILE* fp) // Load a numeric value from text file; one per line.
 {
     char Buf[4096], *p=Buf; Buf[4095]='\0';
@@ -146,6 +161,7 @@ double lanczos(double d)
         if(fabs(d) > radius) return 0;
         double dr = (d *= 3.14159265) / radius;
         return sin(d) * sin(dr) / (d*dr);
+//	return taylorSined(d) * taylorSined(dr) / (d*dr);
 }
 /*
 void Org_Play2(unsigned sampling_rate, FILE* foutput)
@@ -232,7 +248,7 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 				if(cur_note->panning != 255) i->cur_pan = cur_note->panning;
 				if(cur_note->note != 255)
 				{
-					double freq = pow(2.0, (double)((cur_note->note + i->tuning/1000.0+155.376)/12));
+					double freq = pow(2,((cur_note->note + i->tuning/1000.0+155.376)/12.0));
 					i->phaseinc = freq / sampling_rate;
 					i->phaseacc = 0;
 
