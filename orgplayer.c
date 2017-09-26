@@ -317,6 +317,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 
 	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
 	float* ret = malloc(sizeof(float)*(samples_per_beat * 2)*head.loopend);
+	printf("Full size (size_t) : %d\n", sizeof(float)*(samples_per_beat * 2)*head.loopend);
 	if(!result)
 	{
 		exit(EXIT_FAILURE);
@@ -336,8 +337,8 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 				head.ins[j].lastnote = 0;
 			}
 		}
-		fprintf(stderr, "[%d (%g seconds)]   \r",
-			cur_beat, total_beats++*samples_per_beat/(double)(sampling_rate));
+		fprintf(stderr, "[%d (%g seconds), / %d]   \r",
+			cur_beat, total_beats++*samples_per_beat/(double)(sampling_rate), head.loopend);
 		memset(result,0, sizeof(float)*(samples_per_beat *2));
 		for(j = 0; j < 16; j++)
 		{
