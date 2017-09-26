@@ -305,6 +305,117 @@ void Org_Play(unsigned sampling_rate, FILE* output)
 	}
 }
 
+float* Org_Generate(unsigned sampling_rate, FILE* output)
+{
+	Ins* i;
+	double samples_per_millisecond = sampling_rate * 1e-3, master_volume = 4e-6;
+	int samples_per_beat = head.tempo * samples_per_millisecond;
+	int j,k;
+	_org_notes* cur_note;
+
+	int retindex = 0;
+
+	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
+	float* ret = malloc(sizeof(float)*(samples_per_beat * 2)*head.loopend);
+	if(!result)
+	{
+		exit(EXIT_FAILURE);
+	}
+	if(!ret)
+	{
+		exit(EXIT_FAILURE);
+	}
+	int cur_beat=0, total_beats=0;
+	before_loop:
+	for(;;++cur_beat)
+	{
+		if(cur_beat == head.loopend) { 
+			cur_beat = head.loopbegin;
+			for(j = 0; j < 16; j++)
+			{
+				head.ins[j].lastnote = 0;
+			}
+		}
+		fprintf(stderr, "[%d (%g seconds)]   \r",
+			cur_beat, total_beats++*samples_per_beat/(double)(sampling_rate));
+		memset(result,0, sizeof(float)*(samples_per_beat *2));
+		for(j = 0; j < 16; j++)
+		{
+			i = &head.ins[j];
+			for(k = i->lastnote; k < i->nbnotes && i->notes[k].start <= cur_beat; k++)
+			{
+				if (i->notes[k].start == cur_beat) {
+					cur_note = &i->notes[k];
+					i->lastnote = k;
+					break;
+				} else {
+					cur_note = NULL;
+				}
+			}
+			if(cur_note)
+			{
+				if(cur_note->volume != 255) i->cur_vol = cur_note->volume * master_volume;
+				if(cur_note->panning != 255) i->cur_pan = cur_note->panning;
+				if(cur_note->note != 255)
+				{
+					double freq = pow(2,((cur_note->note + i->tuning/1000.0+155.376)/12.0));
+					i->phaseinc = freq / sampling_rate;
+					i->phaseacc = 0;
+
+					i->cur_wave = &WaveTable[256 * (i->wave % 100)];
+					i->cur_wavesize = 256;
+					i->cur_length = i->pi ? 1024/i->phaseinc : (cur_note->length * samples_per_beat);
+
+					if(i >= &head.ins[8])
+					{
+						i->cur_wavesize = 0;
+					}
+					if(i->cur_wavesize <= 0) i->cur_length = 0;
+				}
+				cur_note = NULL;
+			}
+			//Generate WAV
+			//Creating volume for left and right
+			
+			double left = (i->cur_pan > 6 ? 12 - i->cur_pan : 6) * i->cur_vol;
+			double right = (i->cur_pan < 6 ? i->cur_pan : 6) * i ->cur_vol;
+
+			int n = samples_per_beat > i->cur_length ? i->cur_length : samples_per_beat;
+			int p;
+			for( p = 0; p < n; p++)
+			{
+				double pos = i->phaseacc;
+				double scale = 1/i->phaseinc > 1 ? 1 : 1/i->phaseinc, density = 0, sample = 0;
+				int min = -radius/scale + pos - 0.5;
+				int max =  radius/scale + pos + 0.5;
+				int m;
+				//sample = 0;
+				//density =0;
+				for(m=min; m<max; ++m) // Collect a weighted average.
+				{
+					double factor = lanczos( (m-pos+0.5) * scale );
+					density += factor;
+					sample += i->cur_wave[m<0 ? 0 : m%i->cur_wavesize] * factor;
+				}
+				if(density > 0) sample /= density; // Normalize
+				// Save audio in float32 format:
+				result[p*2 + 0] += sample * left;
+				result[p*2 + 1] += sample * right;
+				i->phaseacc += i->phaseinc;
+			}
+			i->cur_length -= n;
+		}
+		//fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
+		//fflush(output);
+		memcpy(&ret[retindex], result, sizeof(float)*(samples_per_beat*2));
+		retindex += samples_per_beat*2;
+	}
+
+	
+		fwrite(&ret[0], sizeof(float),samples_per_beat*2*head.loopend, output);
+		fflush(output);
+	return ret;
+}
 
 int main(int argc, char** argv)
 {
@@ -316,7 +427,8 @@ int main(int argc, char** argv)
 
 #else
 	FILE* fp = popen("aplay -fdat -fFLOAT_LE", "w"); /* Send audio to aplay */
-	Org_Play(48000, fp); // Play audio
+	//Org_Play(48000, fp); // Play audio
+	Org_Generate(48000, fp); // Play audio
 	pclose(fp);
 #endif
 	return 0;
