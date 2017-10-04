@@ -199,7 +199,7 @@ void Org_Play2(unsigned sampling_rate, FILE* foutput)
 	}
 }
 */
-void Org_Play(unsigned sampling_rate, FILE* output)
+void Org_Play_realtime(unsigned sampling_rate, FILE* output)
 {
 	#ifdef __WIN32__
 	WindowsAudio_Open(48000, 2, 32);
@@ -412,9 +412,11 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 		retindex += samples_per_beat*2;
 	}
 
-	
-		fwrite(&ret[0], sizeof(float),samples_per_beat*2*head.loopend, output);
+	for(i=0;i<head.loop;++i)
+	{
+		fwrite(&ret[i*samples_per_beat*2], sizeof(float),samples_per_beat*2, output);
 		fflush(output);
+	}
 	return ret;
 }
 
