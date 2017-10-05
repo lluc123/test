@@ -3,6 +3,7 @@
 #include<stdint.h>
 #include<math.h>
 #include<stdbool.h>
+#include<string.h>
 
 typedef uint32_t u32;
 typedef uint16_t u16;
@@ -412,9 +413,9 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 		retindex += samples_per_beat*2;
 	}
 
-	for(i=0;i<head.loop;++i)
+	for(retindex=0;retindex<head.loopend;++i)
 	{
-		fwrite(&ret[i*samples_per_beat*2], sizeof(float),samples_per_beat*2, output);
+		fwrite(&ret[retindex*samples_per_beat*2], sizeof(float),samples_per_beat*2, output);
 		fflush(output);
 	}
 	return ret;
