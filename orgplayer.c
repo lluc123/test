@@ -15,6 +15,17 @@ typedef int8_t s8;
 int fget16(FILE* fp) { int a = fgetc(fp); int b = fgetc(fp); return (b<<8)+a; }
 int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a; }
 
+double testSin(double j)
+{
+	const double i = 5*3.14159265*3.14159265;
+	double x = fabs(j);
+	double ret = j/x;
+	double r = 4*x;
+	double t = (r*3.14159265)-(r*x);
+	ret *= (4*t)/(i-t);
+	return ret;
+}
+
 double taylorSined(double rad)
 {
 /*	if(rad>1.57 || rad<-1.57)
@@ -156,6 +167,7 @@ void Org_Load(const char* fn)
 
 #define radius 2
 
+
 double lanczos(double d)
 {
 	if(d == 0) return 1.;
@@ -233,15 +245,16 @@ void Org_Play_realtime(unsigned sampling_rate, FILE* output)
 		for(j = 0; j < 16; j++)
 		{
 			i = &head.ins[j];
-			for(k = i->lastnote; k < i->nbnotes && i->notes[k].start <= cur_beat; k++)
+			for(k = i->lastnote; k < i->nbnotes; k++)
 			{
-				if (i->notes[k].start == cur_beat) {
+				cur_note = NULL;
+				if (i->notes[k].start <= cur_beat && i->notes[k].start + i->notes[k].length > cur_beat) {
 					cur_note = &i->notes[k];
 					i->lastnote = k;
 					break;
-				} else {
-					cur_note = NULL;
 				}
+				if(i->notes[k].start > cur_beat )
+					break;
 			}
 			if(cur_note)
 			{
@@ -346,12 +359,11 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 			i = &head.ins[j];
 			for(k = i->lastnote; k < i->nbnotes && i->notes[k].start <= cur_beat; k++)
 			{
+				cur_note = NULL;
 				if (i->notes[k].start == cur_beat) {
 					cur_note = &i->notes[k];
 					i->lastnote = k;
 					break;
-				} else {
-					cur_note = NULL;
 				}
 			}
 			if(cur_note)
