@@ -342,7 +342,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 	}
 	int cur_beat=0, total_beats=0;
 	before_loop:
-	for(;;++cur_beat)
+	for(;cur_beat < head.loopend;++cur_beat)
 	{
 		if(cur_beat == head.loopend) { 
 			cur_beat = head.loopbegin;
@@ -419,17 +419,10 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 			}
 			i->cur_length -= n;
 		}
-		//fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
-		//fflush(output);
-		memcpy(&ret[retindex], result, sizeof(float)*(samples_per_beat*2));
-		retindex += samples_per_beat*2;
-	}
-
-	for(retindex=0;retindex<head.loopend;++i)
-	{
-		fwrite(&ret[retindex*samples_per_beat*2], sizeof(float),samples_per_beat*2, output);
+		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
 		fflush(output);
 	}
+
 	return ret;
 }
 
@@ -442,10 +435,11 @@ int main(int argc, char** argv)
 #ifdef __WIN32__
 
 #else
-	FILE* fp = popen("aplay -fdat -fFLOAT_LE", "w"); /* Send audio to aplay */
+	//FILE* fp = popen("aplay -fdat -fFLOAT_LE", "w"); /* Send audio to aplay */
+	FILE* fp = fopen("test.wav", "wb"); /* Send audio to aplay */
 	//Org_Play(48000, fp); // Play audio
 	Org_Generate(48000, fp); // Play audio
-	pclose(fp);
+	fclose(fp);
 #endif
 	return 0;
 }
