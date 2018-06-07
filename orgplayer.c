@@ -330,13 +330,9 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 	int retindex = 0;
 
 	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
-	float* ret = malloc(sizeof(float)*(samples_per_beat * 2)*head.loopend);
+	//float* ret = malloc(sizeof(float)*(samples_per_beat * 2)*head.loopend);
 	printf("Full size (size_t) : %d\n", sizeof(float)*(samples_per_beat * 2)*head.loopend);
 	if(!result)
-	{
-		exit(EXIT_FAILURE);
-	}
-	if(!ret)
 	{
 		exit(EXIT_FAILURE);
 	}
@@ -357,9 +353,9 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 		for(j = 0; j < 16; j++)
 		{
 			i = &head.ins[j];
+			cur_note = NULL;
 			for(k = i->lastnote; k < i->nbnotes && i->notes[k].start <= cur_beat; k++)
 			{
-				cur_note = NULL;
 				if (i->notes[k].start == cur_beat) {
 					cur_note = &i->notes[k];
 					i->lastnote = k;
@@ -423,23 +419,47 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 		fflush(output);
 	}
 
-	return ret;
+	return 0;
 }
 
 int main(int argc, char** argv)
 {
+	char* fileMusic = 0;
+	int directplay = 0;
 	LoadWaveTable();
-	Org_Load(argv[1]);
 
+	for(int i = 1; i<argc; i++)
+	{
+		if(argv[i][0] != '-')
+		{
+			fileMusic = argv[i];
+		}
+		else
+		{
+			for(int c = 1;argv[i][c] != '\0';c++)
+			{
+				//MY COMMAND OPTIONS
+				if(argv[i][c] == 'p')
+					directplay=1;
+			}
+		}
+	}
+	Org_Load(fileMusic);
 
 #ifdef __WIN32__
 
 #else
-	//FILE* fp = popen("aplay -fdat -fFLOAT_LE", "w"); /* Send audio to aplay */
-	FILE* fp = fopen("test.wav", "wb"); /* Send audio to aplay */
+	FILE* fp;
+	if(directplay)
+		fp = popen("aplay -fdat -fFLOAT_LE", "w"); /* Send audio to aplay */
+	else
+		fp = fopen("test.wav", "wb"); /* Send audio to aplay */
 	//Org_Play(48000, fp); // Play audio
 	Org_Generate(48000, fp); // Play audio
-	fclose(fp);
+	if(directplay)
+		pclose(fp);
+	else
+		fclose(fp);
 #endif
 	return 0;
 }
