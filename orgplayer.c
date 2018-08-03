@@ -136,11 +136,6 @@ void Org_Load(const char* fn)
 	{
 		head.ins[i] = (Ins){fget16(fp),fgetc(fp),fgetc(fp)!=0,fget16(fp),
 			0,0,0,0,0,0,0,0,0};
-		/*head.ins[i].pitch = fget16(fp);
-		head.ins[i].instrument = fgetc(fp);
-		head.ins[i].pi = fgetc(fp);
-		head.ins[i].nbnotes = fget16(fp);
-		head.ins[i].notes = NULL;*/
 	}
 	for( i = 0; i < 16; i++)
 	{
@@ -161,7 +156,6 @@ void Org_Load(const char* fn)
 			for( k = 0; k < head.ins[i].nbnotes; k++) { head.ins[i].notes[k].panning = fgetc(fp); }
 		}
 	}
-	end_load:
 	fclose(fp);
 }
 
@@ -175,148 +169,6 @@ double lanczos(double d)
         double dr = (d *= 3.14159265) / radius;
         return sin(d) * sin(dr) / (d*dr);
 //	return taylorSined(d) * taylorSined(dr) / (d*dr);
-}
-/*
-void Org_Play2(unsigned sampling_rate, FILE* foutput)
-{
-	
-	double samples_per_millisecond = sampling_rate * 1e-3, master_volume = 4e-6;
-	int samples_per_beat = 1 * samples_per_millisecond;
-	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
-	if(!result)
-	{
-		exit(EXIT_FAILURE);
-	}
-	for(;;)
-	{
-		Ins* i = &(head.ins[2]);
-
-		memset(result,0, sizeof(float)*(samples_per_beat *2));
-		int j,k;
-		k=0;
-		for(j =0;j < samples_per_beat*2;j+=2)
-		{
-			i->cur_wave = &WaveTable[256 * (head.ins[2].wave % 100)];
-			result[j]=*(head.ins[2].cur_wave+k);
-			result[j+1]=*(head.ins[2].cur_wave+k);
-			k++;
-		}
-
-#ifdef __WIN32__
-		WindowsAudio::Write( (const unsigned char*) &result[0], 4*result.size());
-		std::fflush(stderr);
-#else
-		fwrite(&result[0], 4,sizeof(float)*(samples_per_beat *2), foutput);
-		fflush(foutput);
-#endif
-	}
-}
-*/
-void Org_Play_realtime(unsigned sampling_rate, FILE* output)
-{
-	#ifdef __WIN32__
-	WindowsAudio_Open(48000, 2, 32);
-	#endif
-	Ins* i;
-	double samples_per_millisecond = sampling_rate * 1e-3, master_volume = 4e-6;
-	int samples_per_beat = head.tempo * samples_per_millisecond;
-	int j,k;
-	_org_notes* cur_note;
-
-	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
-	if(!result)
-	{
-		exit(EXIT_FAILURE);
-	}
-	int cur_beat=0, total_beats=0;
-	before_loop:
-	for(;;++cur_beat)
-	{
-		if(cur_beat == head.loopend) { 
-			cur_beat = head.loopbegin;
-			for(j = 0; j < 16; j++)
-			{
-				head.ins[j].lastnote = 0;
-			}
-		}
-		fprintf(stderr, "[%d (%g seconds)]   \r",
-			cur_beat, total_beats++*samples_per_beat/(double)(sampling_rate));
-		memset(result,0, sizeof(float)*(samples_per_beat *2));
-		for(j = 0; j < 16; j++)
-		{
-			i = &head.ins[j];
-			for(k = i->lastnote; k < i->nbnotes; k++)
-			{
-				cur_note = NULL;
-				if (i->notes[k].start <= cur_beat && i->notes[k].start + i->notes[k].length > cur_beat) {
-					cur_note = &i->notes[k];
-					i->lastnote = k;
-					break;
-				}
-				if(i->notes[k].start > cur_beat )
-					break;
-			}
-			if(cur_note)
-			{
-				if(cur_note->volume != 255) i->cur_vol = cur_note->volume * master_volume;
-				if(cur_note->panning != 255) i->cur_pan = cur_note->panning;
-				if(cur_note->note != 255)
-				{
-					double freq = pow(2,((cur_note->note + i->tuning/1000.0+155.376)/12.0));
-					i->phaseinc = freq / sampling_rate;
-					i->phaseacc = 0;
-
-					i->cur_wave = &WaveTable[256 * (i->wave % 100)];
-					i->cur_wavesize = 256;
-					i->cur_length = i->pi ? 1024/i->phaseinc : (cur_note->length * samples_per_beat);
-
-					if(i >= &head.ins[8])
-					{
-						i->cur_wavesize = 0;
-					}
-					if(i->cur_wavesize <= 0) i->cur_length = 0;
-				}
-				cur_note = NULL;
-			}
-			//Generate WAV
-			//Creating volume for left and right
-			
-			double left = (i->cur_pan > 6 ? 12 - i->cur_pan : 6) * i->cur_vol;
-			double right = (i->cur_pan < 6 ? i->cur_pan : 6) * i ->cur_vol;
-
-			int n = samples_per_beat > i->cur_length ? i->cur_length : samples_per_beat;
-			int p;
-			for( p = 0; p < n; p++)
-			{
-				double pos = i->phaseacc;
-				double scale = 1/i->phaseinc > 1 ? 1 : 1/i->phaseinc, density = 0, sample = 0;
-				int min = -radius/scale + pos - 0.5;
-				int max =  radius/scale + pos + 0.5;
-				int m;
-				//sample = 0;
-				//density =0;
-				for(m=min; m<max; ++m) // Collect a weighted average.
-				{
-					double factor = lanczos( (m-pos+0.5) * scale );
-					density += factor;
-					sample += i->cur_wave[m<0 ? 0 : m%i->cur_wavesize] * factor;
-				}
-				if(density > 0) sample /= density; // Normalize
-				// Save audio in float32 format:
-				result[p*2 + 0] += sample * left;
-				result[p*2 + 1] += sample * right;
-				i->phaseacc += i->phaseinc;
-			}
-			i->cur_length -= n;
-		}
-#ifdef __WIN32__
-		WindowsAudio::Write( (const unsigned char*) &result[0], 4*result.size());
-		std::fflush(stderr);
-#else
-		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
-		fflush(output);
-#endif
-	}
 }
 
 float* Org_Generate(unsigned sampling_rate, FILE* output)
@@ -376,6 +228,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 					i->cur_wavesize = 256;
 					i->cur_length = i->pi ? 1024/i->phaseinc : (cur_note->length * samples_per_beat);
 
+					//REMOVING THE DRUMS
 					if(i >= &head.ins[8])
 					{
 						i->cur_wavesize = 0;
