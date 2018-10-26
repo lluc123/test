@@ -279,6 +279,7 @@ int main(int argc, char** argv)
 {
 	char* fileMusic = 0;
 	int directplay = 0;
+	int loopflag = 0;
 	LoadWaveTable();
 
 	for(int i = 1; i<argc; i++)
@@ -292,8 +293,14 @@ int main(int argc, char** argv)
 			for(int c = 1;argv[i][c] != '\0';c++)
 			{
 				//MY COMMAND OPTIONS
-				if(argv[i][c] == 'p')
-					directplay=1;
+				//
+				switch (argv[i][c]) {
+					case 'l':
+						loopflag=-1;
+					case 'p':
+						directplay=-1;
+						break;
+				}
 			}
 		}
 	}
