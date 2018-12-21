@@ -14,6 +14,7 @@ typedef int8_t s8;
 
 int fget16(FILE* fp) { int a = fgetc(fp); int b = fgetc(fp); return (b<<8)+a; }
 int fget32(FILE* fp) { int a = fget16(fp); int b = fget16(fp); return (b<<16)+a; }
+void oneBeat(int cur_beat, float* result, int samples_per_beat, unsigned sampling_rate);
 
 double testSin(double j)
 {
@@ -187,6 +188,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 
 	for(;cur_beat < head.loopend;++cur_beat)
 	{
+		oneBeat(cur_beat, result, samples_per_beat, sampling_rate);
 		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
 		fflush(output);
 	}
@@ -194,7 +196,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 	return 0;
 }
 
-float* oneBeat(int cur_beat, float* result, int samples_per_beat, unsigned sampling_rate)
+void oneBeat(int cur_beat, float* result, int samples_per_beat, unsigned sampling_rate)
 {
 	Ins* i;
 	int j,k;
@@ -278,7 +280,6 @@ float* oneBeat(int cur_beat, float* result, int samples_per_beat, unsigned sampl
 			}
 			i->cur_length -= n;
 		}
-		return result;
 }
 
 int main(int argc, char** argv)
