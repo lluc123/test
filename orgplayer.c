@@ -173,6 +173,8 @@ double lanczos(double d)
 
 float* Org_Generate(unsigned sampling_rate, FILE* output)
 {
+	double samples_per_millisecond = sampling_rate * 1e-3;
+	int samples_per_beat = head.tempo * samples_per_millisecond;
 
 	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
 	//float* ret = malloc(sizeof(float)*(samples_per_beat * 2)*head.loopend);
@@ -181,7 +183,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 	{
 		exit(EXIT_FAILURE);
 	}
-	int cur_beat=0, total_beats=0;
+	int cur_beat=0;
 
 	for(;cur_beat < head.loopend;++cur_beat)
 	{
@@ -192,13 +194,12 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 	return 0;
 }
 
-float* oneBeat(int cur_beat, float* result)
+float* oneBeat(int cur_beat, float* result, int samples_per_beat, unsigned sampling_rate)
 {
 	Ins* i;
-	double samples_per_millisecond = sampling_rate * 1e-3, master_volume = 4e-6;
-	int samples_per_beat = head.tempo * samples_per_millisecond;
 	int j,k;
 	_org_notes* cur_note;
+	double master_volume = 4e-6;
 
 	int retindex = 0;
 		if(cur_beat == head.loopend) { 
@@ -208,8 +209,8 @@ float* oneBeat(int cur_beat, float* result)
 				head.ins[j].lastnote = 0;
 			}
 		}
-		fprintf(stderr, "[%d (%g seconds), / %d]   \r",
-			cur_beat, total_beats++*samples_per_beat/(double)(sampling_rate), head.loopend);
+		fprintf(stderr, "[%d / %d]   \r",
+			cur_beat, head.loopend);
 		memset(result,0, sizeof(float)*(samples_per_beat *2));
 		for(j = 0; j < 16; j++)
 		{
