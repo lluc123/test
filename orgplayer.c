@@ -173,13 +173,6 @@ double lanczos(double d)
 
 float* Org_Generate(unsigned sampling_rate, FILE* output)
 {
-	Ins* i;
-	double samples_per_millisecond = sampling_rate * 1e-3, master_volume = 4e-6;
-	int samples_per_beat = head.tempo * samples_per_millisecond;
-	int j,k;
-	_org_notes* cur_note;
-
-	int retindex = 0;
 
 	float* result = malloc(sizeof(float)*(samples_per_beat * 2));
 	//float* ret = malloc(sizeof(float)*(samples_per_beat * 2)*head.loopend);
@@ -199,8 +192,15 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 	return 0;
 }
 
-float* oneBeat(int cur_beat)
+float* oneBeat(int cur_beat, float* result)
 {
+	Ins* i;
+	double samples_per_millisecond = sampling_rate * 1e-3, master_volume = 4e-6;
+	int samples_per_beat = head.tempo * samples_per_millisecond;
+	int j,k;
+	_org_notes* cur_note;
+
+	int retindex = 0;
 		if(cur_beat == head.loopend) { 
 			cur_beat = head.loopbegin;
 			for(j = 0; j < 16; j++)
