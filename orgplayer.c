@@ -189,9 +189,18 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 		exit(EXIT_FAILURE);
 	}
 	int cur_beat=0, total_beats=0;
-	before_loop:
+
 	for(;cur_beat < head.loopend;++cur_beat)
 	{
+		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
+		fflush(output);
+	}
+
+	return 0;
+}
+
+float* oneBeat(int cur_beat)
+{
 		if(cur_beat == head.loopend) { 
 			cur_beat = head.loopbegin;
 			for(j = 0; j < 16; j++)
@@ -268,11 +277,7 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 			}
 			i->cur_length -= n;
 		}
-		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
-		fflush(output);
-	}
-
-	return 0;
+		return result;
 }
 
 int main(int argc, char** argv)
