@@ -113,7 +113,7 @@ struct {
 	Ins ins[16];
 } head;
 
-void Org_Destroy(void) { int i; for( i = 0; i < 16; i++) { free(head.ins[i].notes); } }
+void Org_Destroy(void) { int i; for( i = 0; i < 16; i++) { free(head.ins[i].notes); } fprintf(stderr, "ORG Destroyed !\n");}
 
 void Org_Load(const char* fn)
 {
@@ -192,6 +192,9 @@ float* Org_Generate(unsigned sampling_rate, FILE* output)
 		fwrite(&result[0], sizeof(float),samples_per_beat*2, output);
 		fflush(output);
 	}
+
+	free(result);
+	
 
 	return 0;
 }
