@@ -118,13 +118,14 @@ void PxtLoad(Pxt * thi, FILE* fp)
 	{
 		struct Channels* c = &(thi->channels[i]);
 #define _Fgetint_() ((int) fgetv(fp))
-            	c = { _Fgetint_() != 0, _Fgetint_(), // enabled, length
-                  { Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // carrier wave
-                  { Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // frequency wave
-                  { Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // amplitude wave
-                  { _Fgetint_(), { {_Fgetint_(),_Fgetint_()}, {_Fgetint_(),_Fgetint_()}, {_Fgetint_(),_Fgetint_()} } } // envelope
+            		struct Channels t =  { _Fgetint_() != 0, _Fgetint_(), // enabled, length
+                  	{ Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // carrier wave
+                  	{ Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // frequency wave
+                  	{ Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // amplitude wave
+                  	{ _Fgetint_(), { {_Fgetint_(),_Fgetint_()}, {_Fgetint_(),_Fgetint_()}, {_Fgetint_(),_Fgetint_()} } } // envelope
+			*c = t;
                 };
-#undef _Fgetint_()
+#undef _Fgetint_
 	}
 }
 
