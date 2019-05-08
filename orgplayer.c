@@ -81,6 +81,82 @@ void LoadWaveTable()
 	}
 }
 
+typedef struct shortVector
+{
+	short* data;
+	unsigned int size;
+} shortVector;
+
+typedef struct Pxt
+{
+	struct Channels
+	{
+        	bool enabled;
+        	int nsamples;
+
+		struct Wave
+        	{
+            		const signed char* wave;
+            		double pitch;
+            		int level, offset;
+        	}
+        	carrier,   // The main signal to be generated.
+        	frequency, // Modulator to the main signal.
+        	amplitude; // Modulator to the main signal.
+
+		struct Env
+		{
+			int initial;
+			struct {int time, val; } p[3];
+		} envelope;
+	} channels[4];
+} Pxt;
+
+void PxtLoad(Pxt * thi, FILE* fp)
+{
+	for(int i = 0; i < 4; i++)
+	{
+		struct Channels* c = &(thi->channels[i]);
+#define _Fgetint_() ((int) fgetv(fp))
+            	c = { _Fgetint_() != 0, _Fgetint_(), // enabled, length
+                  { Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // carrier wave
+                  { Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // frequency wave
+                  { Waveforms[_Fgetint_()%6], fgetv(fp), _Fgetint_(), _Fgetint_() }, // amplitude wave
+                  { _Fgetint_(), { {_Fgetint_(),_Fgetint_()}, {_Fgetint_(),_Fgetint_()}, {_Fgetint_(),_Fgetint_()} } } // envelope
+                };
+#undef _Fgetint_()
+	}
+}
+
+static shortVector DrumSamples[12];
+void LoadDrums()
+{
+    GenerateWaveforms();
+    /* List of PXT files containing these percussion instruments: */
+    static const int patch[] = {0x96,0,0x97,0, 0x9a,0x98,0x99,0, 0x9b,0,0,0};
+    for(unsigned drumno=0; drumno<12; ++drumno)
+    {
+        if(!patch[drumno]) continue; // Leave that non-existed drum file unloaded
+        // Load the drum parameters
+        char Buf[64];
+        sprintf(Buf, "data/fx%02x.pxt", patch[drumno]);
+        FILE* fp = fopen(Buf, "rb");
+        if(!fp) { perror(Buf); continue; }
+        Pxt d;
+	PxtLoad(&d, fp);
+        fclose(fp);
+        // Synthesize and mix the drum's component channels
+        auto& sample = DrumSamples[drumno];
+        for(auto& c: d.channels)
+        {
+            auto buf = c.Synth();
+            if(buf.size() > sample.size()) sample.resize(buf.size());
+            for(size_t a=0; a<buf.size(); ++a)
+                sample[a] += buf[a];
+        }
+    }
+}
+
 typedef struct{
 	u32 start;
 	s32 note;
@@ -247,6 +323,13 @@ void oneBeat(int cur_beat, float* result, int samples_per_beat, unsigned samplin
 					if(i >= &head.ins[8])
 					{
 						i->cur_wavesize = 0;
+						/*
+                            			const auto& d = DrumSamples[i.wave % 12];
+                            			i.phaseinc = event.note * (22050/32.5) / sampling_rate; // Linear frequency
+                            			i.cur_wave     = &d[0];
+                            			i.cur_wavesize = d.size();
+                            			i.cur_length   = d.size() / i.phaseinc;
+						*/
 					}
 					if(i->cur_wavesize <= 0) i->cur_length = 0;
 				}
